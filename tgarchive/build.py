@@ -131,8 +131,13 @@ class Build:
     def _build_rss(self, messages, rss_file, atom_file):
         f = FeedGenerator()
         f.id(self.config["site_url"])
+        pkg = None
+        try:
+            pkg = pkg_resources.get_distribution("tg-archive")
+        except:
+            ...
         f.generator(
-            "tg-archive {}".format(pkg_resources.get_distribution("tg-archive").version))
+            f"tg-archive {pkg.version if pkg else 'custom'}")
         f.link(href=self.config["site_url"], rel="alternate")
         f.title(self.config["site_name"].format(group=self.config["group"]))
         f.subtitle(self.config["site_description"])
