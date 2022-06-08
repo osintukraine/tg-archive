@@ -264,7 +264,7 @@ class Sync:
                     basename, fname, thumb = self._download_media(msg)
                     return Media(
                         id=msg.id,
-                        type="photo",
+                        type=msg.file.mime_type,
                         url=fname,
                         title=basename,
                         description=None,
