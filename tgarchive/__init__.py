@@ -4,6 +4,7 @@ import os
 import shutil
 import sys
 import yaml
+from pathlib import Path
 
 from .db import DB
 
@@ -45,6 +46,7 @@ def get_config(path):
     config = {}
     with open(path, "r") as f:
         config = {**_CONFIG, **yaml.safe_load(f.read())}
+    os.chdir(Path(path).parent)
     return config
 
 
@@ -87,6 +89,10 @@ def main():
                    help="symlink media and other static files instead of copying")
 
     args = p.parse_args(args=None if sys.argv[1:] else ['--help'])
+
+    args.data = str(Path(args.data).resolve()) if args.data else args.data
+    args.session = str(Path(args.session).resolve()) if args.session else args.session
+    args.path = str(Path(args.path).resolve()) if args.path else args.path
 
     if args.version:
         print("v{}".format(__version__))
