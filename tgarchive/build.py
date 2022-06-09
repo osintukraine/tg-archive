@@ -2,7 +2,6 @@ from collections import OrderedDict, deque
 import logging
 import math
 import os
-import pkg_resources
 import re
 import shutil
 import magic
@@ -12,7 +11,7 @@ from feedgen.feed import FeedGenerator
 from jinja2 import Template
 
 from .db import User, Message
-
+from . import __version__
 
 _NL2BR = re.compile(r"\n\n+")
 
@@ -131,13 +130,8 @@ class Build:
     def _build_rss(self, messages, rss_file, atom_file):
         f = FeedGenerator()
         f.id(self.config["site_url"])
-        pkg = None
-        try:
-            pkg = pkg_resources.get_distribution("tg-archive")
-        except:
-            ...
         f.generator(
-            f"tg-archive {pkg.version if pkg else 'custom'}")
+            f"tg-archive {__version__}")
         f.link(href=self.config["site_url"], rel="alternate")
         f.title(self.config["site_name"].format(group=self.config["group"]))
         f.subtitle(self.config["site_description"])
