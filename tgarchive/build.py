@@ -6,6 +6,7 @@ import re
 import shutil
 import magic
 from datetime import timezone
+from pathlib import Path
 
 from feedgen.feed import FeedGenerator
 from jinja2 import Template
@@ -184,10 +185,14 @@ class Build:
 
         # Clear the output directory.
         if os.path.exists(pubdir):
-            shutil.rmtree(pubdir)
+            for path in Path(pubdir).iterdir():
+                if path.is_file():
+                    path.unlink()
+                elif path.is_dir():
+                    shutil.rmtree(path)
 
         # Re-create the output directory.
-        os.mkdir(pubdir)
+        Path(pubdir).mkdir(parents=True, exist_ok=True)
 
         # Copy the static directory into the output directory.
         for f in [self.config["static_dir"]]:
