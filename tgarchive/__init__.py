@@ -4,6 +4,7 @@ import os
 import shutil
 import sys
 import yaml
+from pathlib import Path
 
 from .db import DB
 
@@ -45,6 +46,7 @@ def get_config(path):
     config = {}
     with open(path, "r") as f:
         config = {**_CONFIG, **yaml.safe_load(f.read())}
+    os.chdir(Path(path).parent)
     return config
 
 
@@ -59,7 +61,7 @@ def main():
     p.add_argument("-d", "--data", action="store", type=str, default="data.sqlite",
                    dest="data", help="path to the SQLite data file to store messages")
     p.add_argument("-se", "--session", action="store", type=str, default="session.session",
-                   dest="session", help="path to the session file")
+                   dest="session", help="path to the session file. If it is alone parameter, session file would be created.")
     p.add_argument("-v", "--version", action="store_true", dest="version", help="display version")
 
     n = p.add_argument_group("new")
@@ -149,3 +151,11 @@ def main():
         b.build()
 
         logging.info("published to directory '{}'".format(config["publish_dir"]))
+
+    elif args.session:
+        # Import because the Telegram client import is quite heavy.
+        from .sync import Sync
+
+        cfg = get_config(args.config)
+        s = Sync(cfg, args.session, None)
+        logging.info(f"Done with: {args.session}")

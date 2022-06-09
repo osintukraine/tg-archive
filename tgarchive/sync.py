@@ -6,6 +6,7 @@ import os
 import tempfile
 import shutil
 import time
+from pathlib import Path
 
 from PIL import Image
 from telethon import TelegramClient, errors, sync
@@ -28,14 +29,13 @@ class Sync:
 
         self.client = self.new_client(session_file, config)
 
-        if not os.path.exists(self.config["media_dir"]):
-            os.mkdir(self.config["media_dir"])
-
     def sync(self, ids=None, from_id=None):
         """
         Sync syncs messages from Telegram from the last synced message
         into the local SQLite DB.
         """
+        if not os.path.exists(self.config["media_dir"]):
+            os.mkdir(self.config["media_dir"])
 
         if ids:
             last_id, last_date = (ids, None)
@@ -94,9 +94,18 @@ class Sync:
         logging.info(
             "finished. fetched {} messages. last message = {}".format(n, last_date))
 
-    def new_client(self, session, config):
+    def new_client(self, session: str, config: dict):
+        current_dir = os.getcwd()
+        if not (session_path := Path(session)).is_file():
+            session_path.parents[0].mkdir(parents=True, exist_ok=True)
+            session = session_path.name
+            os.chdir(Path(session_path).parent)
+
         client = TelegramClient(session, config["api_id"], config["api_hash"])
         client.start()
+
+        os.chdir(current_dir)
+
         if config.get("use_takeout", False):
             for retry in range(3):
                 try:
@@ -264,7 +273,7 @@ class Sync:
                     basename, fname, thumb = self._download_media(msg)
                     return Media(
                         id=msg.id,
-                        type="photo",
+                        type=msg.file.mime_type,
                         url=fname,
                         title=basename,
                         description=None,

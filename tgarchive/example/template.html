@@ -162,7 +162,9 @@
 											<span class="filename">{{ m.media.title }}</span>
 										</a>
 									{% else %}
-										<a href="{{ config.media_dir }}/{{ m.media.url }}">{{ m.media.title }}</a>
+									<embed type="{{ m.media.type }}" src="{{ config.media_dir }}/{{ m.media.url }}">
+										<span class="filename">{{ m.media.title }}</span>
+									</embed>
 									{% endif %}
 								</div>
 							{% endif %}

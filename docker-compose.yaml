@@ -1,0 +1,9 @@
+version: '3'
+services:
+  tg-archive:
+    image: tg-archive
+    build:
+      context: .
+    user: ${CURRENT_UID}
+    volumes:
+      - ./:/usr/src/app

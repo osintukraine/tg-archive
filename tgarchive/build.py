@@ -2,17 +2,17 @@ from collections import OrderedDict, deque
 import logging
 import math
 import os
-import pkg_resources
 import re
 import shutil
 import magic
 from datetime import timezone
+from pathlib import Path
 
 from feedgen.feed import FeedGenerator
 from jinja2 import Template
 
 from .db import User, Message
-
+from . import __version__
 
 _NL2BR = re.compile(r"\n\n+")
 
@@ -132,7 +132,7 @@ class Build:
         f = FeedGenerator()
         f.id(self.config["site_url"])
         f.generator(
-            "tg-archive {}".format(pkg_resources.get_distribution("tg-archive").version))
+            f"tg-archive {__version__}")
         f.link(href=self.config["site_url"], rel="alternate")
         f.title(self.config["site_name"].format(group=self.config["group"]))
         f.subtitle(self.config["site_description"])
@@ -185,10 +185,14 @@ class Build:
 
         # Clear the output directory.
         if os.path.exists(pubdir):
-            shutil.rmtree(pubdir)
+            for path in Path(pubdir).iterdir():
+                if path.is_file():
+                    path.unlink()
+                elif path.is_dir():
+                    shutil.rmtree(path)
 
         # Re-create the output directory.
-        os.mkdir(pubdir)
+        Path(pubdir).mkdir(parents=True, exist_ok=True)
 
         # Copy the static directory into the output directory.
         for f in [self.config["static_dir"]]:
