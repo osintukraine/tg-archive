@@ -90,10 +90,6 @@ def main():
 
     args = p.parse_args(args=None if sys.argv[1:] else ['--help'])
 
-    args.data = str(Path(args.data).resolve()) if args.data else args.data
-    args.session = str(Path(args.session).resolve()) if args.session else args.session
-    args.path = str(Path(args.path).resolve()) if args.path else args.path
-
     if args.version:
         print("v{}".format(__version__))
         sys.exit()
