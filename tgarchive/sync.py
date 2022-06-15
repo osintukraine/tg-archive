@@ -247,41 +247,29 @@ class Sync:
         )
 
     def _get_media(self, msg):
-        if isinstance(msg.media, telethon.tl.types.MessageMediaWebPage) and \
-                not isinstance(msg.media.webpage, telethon.tl.types.WebPageEmpty):
-            return Media(
-                id=msg.id,
-                type="webpage",
-                url=msg.media.webpage.url,
-                title=msg.media.webpage.title,
-                description=msg.media.webpage.description if msg.media.webpage.description else None,
-                thumb=None
-            )
-        elif isinstance(msg.media, telethon.tl.types.MessageMediaPhoto) or \
-                isinstance(msg.media, telethon.tl.types.MessageMediaDocument) or \
-                isinstance(msg.media, telethon.tl.types.MessageMediaContact):
-            if self.config["download_media"]:
-                # Filter by extensions?
-                if len(self.config["media_mime_types"]) > 0:
-                    if hasattr(msg, "file") and hasattr(msg.file, "mime_type") and msg.file.mime_type:
-                        if msg.file.mime_type not in self.config["media_mime_types"]:
-                            logging.info("skipping media #{} / {}".format(msg.file.name, msg.file.mime_type))
-                            return
+        if self.config["download_media"]:
+            # Filter by extensions?
+            if len(self.config["media_mime_types"]) > 0:
+                if hasattr(msg, "file") and hasattr(msg.file, "mime_type") and msg.file.mime_type:
+                    if msg.file.mime_type not in self.config["media_mime_types"]:
+                        logging.info("skipping media #{} / {}".format(msg.file.name, msg.file.mime_type))
+                        return
 
-                logging.info("downloading media #{}".format(msg.id))
-                try:
-                    basename, fname, thumb = self._download_media(msg)
-                    return Media(
-                        id=msg.id,
-                        type=msg.file.mime_type,
-                        url=fname,
-                        title=basename,
-                        description=None,
-                        thumb=thumb
-                    )
-                except Exception as e:
-                    logging.error(
-                        "error downloading media: #{}: {}".format(msg.id, e))
+            logging.info("downloading media #{}".format(msg.id))
+            try:
+                basename, fname, thumb = self._download_media(msg)
+                return Media(
+                    id=msg.id,
+                    type=msg.file.mime_type,
+                    url=fname,
+                    title=basename,
+                    description=None,
+                    thumb=thumb
+                )
+            except Exception as e:
+                logging.error(
+                    "error downloading media: #{}: {}".format(msg.id, e))
+        return
 
     def _download_media(self, msg) -> [str, str, str]:
         """
@@ -299,12 +287,11 @@ class Sync:
 
         # If it's a photo, download the thumbnail.
         tname = None
-        if isinstance(msg.media, telethon.tl.types.MessageMediaPhoto):
-            tpath = self.client.download_media(
+        tpath = self.client.download_media(
                 msg, file=tempfile.gettempdir(), thumb=1)
-            tname = "thumb_{}.{}".format(
+        tname = "thumb_{}.{}".format(
                 msg.id, self._get_file_ext(os.path.basename(tpath)))
-            shutil.move(tpath, os.path.join(self.config["media_dir"], tname))
+        shutil.move(tpath, os.path.join(self.config["media_dir"], tname))
 
         return basename, newname, tname
 
