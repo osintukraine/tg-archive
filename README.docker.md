@@ -39,5 +39,5 @@ docker run --rm --user="$(id -u):$(id -g)" -v /home/user/sites:/sites tg-archive
 
 #### Build static site (publish)
 ```bash
-docker run --rm --user="$(id -u):$(id -g)" -v /home/user/sites:/sites -v /var/www/public/test:/sites/test/site tg-archive --config=/sites/test/config.yaml --session=/sites/session.session --build
+docker run --rm --user="$(id -u):$(id -g)" -v /home/user/sites:/sites -v /var/www/public/test:/sites/test/site tg-archive --config=/sites/test/config.yaml --build
 ```
