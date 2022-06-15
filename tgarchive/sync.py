@@ -35,7 +35,7 @@ class Sync:
         into the local SQLite DB.
         """
         if not os.path.exists(self.config["media_dir"]):
-            os.mkdir(self.config["media_dir"])
+            Path(self.config["media_dir"]).mkdir(parents=True, exist_ok=True)
 
         if ids:
             last_id, last_date = (ids, None)

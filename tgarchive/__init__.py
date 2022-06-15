@@ -31,6 +31,7 @@ _CONFIG = {
     "rss_feed_entries": 100,
 
     "publish_dir": "site",
+    "incremental_builds": True,
     "site_url": "https://mysite.com",
     "static_dir": "static",
     "telegram_url": "https://t.me/{id}",

@@ -85,8 +85,12 @@ class Build:
                 if self.config["publish_rss_feed"]:
                     rss_entries.extend(messages)
 
-                self._render_page(messages, month, dayline,
-                                  fname, page, total_pages)
+                filename_rendered_exists = Path(os.path.join(self.config["publish_dir"], fname)).exists()
+                if self.config["incremental_builds"] and len(messages) == self.config["per_page"]\
+                        and filename_rendered_exists:
+                    logging.info(f"Incremental builds: file {fname} exists. Skip rendering.")
+                else:
+                    self._render_page(messages, month, dayline, fname, page, total_pages)
 
         # The last page chronologically is the latest page. Make it index.
         if fname:
@@ -183,13 +187,14 @@ class Build:
     def _create_publish_dir(self):
         pubdir = self.config["publish_dir"]
 
-        # Clear the output directory.
-        if os.path.exists(pubdir):
-            for path in Path(pubdir).iterdir():
-                if path.is_file():
-                    path.unlink()
-                elif path.is_dir():
-                    shutil.rmtree(path)
+        # Clear the output directory if not incremental_builds
+        if not self.config["incremental_builds"]:
+            if os.path.exists(pubdir):
+                for path in Path(pubdir).iterdir():
+                    if path.is_file():
+                        path.unlink()
+                    elif path.is_dir():
+                        shutil.rmtree(path)
 
         # Re-create the output directory.
         Path(pubdir).mkdir(parents=True, exist_ok=True)
