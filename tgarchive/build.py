@@ -195,21 +195,29 @@ class Build:
         Path(pubdir).mkdir(parents=True, exist_ok=True)
 
         # Copy the static directory into the output directory.
-        for f in [self.config["static_dir"]]:
-            target = os.path.join(pubdir, f)
-            if self.symlink:
-                os.symlink(os.path.abspath(f), target)
-            elif os.path.isfile(f):
-                shutil.copyfile(f, target)
-            else:
-                shutil.copytree(f, target)
+        static_dir = self.config["static_dir"]
+        if not os.path.exists(os.path.join(pubdir, os.path.basename(static_dir))):
+            for f in [static_dir]:
+                target = os.path.join(pubdir, f)
+                if self.symlink:
+                    os.symlink(os.path.abspath(f), target)
+                elif os.path.isfile(f):
+                    shutil.copyfile(f, target)
+                else:
+                    shutil.copytree(f, target)
 
         # If media downloading is enabled, copy/symlink the media directory.
         mediadir = self.config["media_dir"]
-        if os.path.exists(mediadir):
+        same_dir = os.path.abspath(mediadir) == os.path.abspath(os.path.join(pubdir, os.path.basename(mediadir)))
+        if os.path.exists(mediadir) and not same_dir:
             if self.symlink:
                 os.symlink(os.path.abspath(mediadir), os.path.join(
                     pubdir, os.path.basename(mediadir)))
             else:
-                shutil.copytree(mediadir, os.path.join(
-                    pubdir, os.path.basename(mediadir)))
+                try:
+                    shutil.copytree(mediadir, os.path.join(
+                        pubdir, os.path.basename(mediadir)), dirs_exist_ok=True)
+                    if self.config["move_media"]:
+                        shutil.rmtree(mediadir, ignore_errors=True, onerror=None)
+                except Exception as e:
+                    print(e)
