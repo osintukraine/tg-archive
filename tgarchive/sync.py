@@ -279,19 +279,22 @@ class Sync:
         # Download the media to the temp dir and copy it back as
         # there does not seem to be a way to get the canonical
         # filename before the download.
+        basename = None
+        newname = None
         fpath = self.client.download_media(msg, file=tempfile.gettempdir())
-        basename = os.path.basename(fpath)
-
-        newname = "{}.{}".format(msg.id, self._get_file_ext(basename))
-        shutil.move(fpath, os.path.join(self.config["media_dir"], newname))
+        if fpath:
+            basename = os.path.basename(fpath)
+            newname = "{}.{}".format(msg.id, self._get_file_ext(basename))
+            shutil.move(fpath, os.path.join(self.config["media_dir"], newname))
 
         # If it's a photo, download the thumbnail.
         tname = None
         tpath = self.client.download_media(
                 msg, file=tempfile.gettempdir(), thumb=1)
-        tname = "thumb_{}.{}".format(
-                msg.id, self._get_file_ext(os.path.basename(tpath)))
-        shutil.move(tpath, os.path.join(self.config["media_dir"], tname))
+        if tpath:
+            tname = "thumb_{}.{}".format(
+                    msg.id, self._get_file_ext(os.path.basename(tpath)))
+            shutil.move(tpath, os.path.join(self.config["media_dir"], tname))
 
         return basename, newname, tname
 
