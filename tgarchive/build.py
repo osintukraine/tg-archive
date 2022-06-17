@@ -187,14 +187,12 @@ class Build:
     def _create_publish_dir(self):
         pubdir = self.config["publish_dir"]
 
-        # Clear the output directory if not incremental_builds
+        # Clear the output directory HTML files, if not incremental_builds
         if not self.config["incremental_builds"]:
             if os.path.exists(pubdir):
                 for path in Path(pubdir).iterdir():
                     if path.is_file():
                         path.unlink()
-                    elif path.is_dir():
-                        shutil.rmtree(path)
 
         # Re-create the output directory.
         Path(pubdir).mkdir(parents=True, exist_ok=True)
@@ -222,7 +220,5 @@ class Build:
                 try:
                     shutil.copytree(mediadir, os.path.join(
                         pubdir, os.path.basename(mediadir)), dirs_exist_ok=True)
-                    if self.config["move_media"]:
-                        shutil.rmtree(mediadir, ignore_errors=True, onerror=None)
                 except Exception as e:
-                    print(e)
+                    ...
