@@ -16,6 +16,8 @@ from . import __version__
 
 _NL2BR = re.compile(r"\n\n+")
 
+log = logging.getLogger("rich")
+
 
 class Build:
     config = {}
@@ -41,7 +43,7 @@ class Build:
 
         timeline = list(self.db.get_timeline())
         if len(timeline) == 0:
-            logging.info("no data found to publish site")
+            log.info("no data found to publish site")
             quit()
 
         for month in timeline:
@@ -88,7 +90,7 @@ class Build:
                 filename_rendered_exists = Path(os.path.join(self.config["publish_dir"], fname)).exists()
                 if self.config["incremental_builds"] and len(messages) == self.config["per_page"]\
                         and filename_rendered_exists:
-                    logging.info(f"Incremental builds: file {fname} exists. Skip rendering.")
+                    log.info(f"Incremental builds: file {fname} exists. Skip rendering.")
                 else:
                     self._render_page(messages, month, dayline, fname, page, total_pages)
 

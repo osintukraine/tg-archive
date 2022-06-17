@@ -12,6 +12,8 @@ from PIL import Image
 from telethon import TelegramClient, errors, sync
 import telethon.tl.types
 
+log = logging.getLogger("rich")
+
 from .db import User, Message, Media
 
 
@@ -39,13 +41,13 @@ class Sync:
 
         if ids:
             last_id, last_date = (ids, None)
-            logging.info("fetching message id={}".format(ids))
+            log.info("fetching message id={}".format(ids))
         elif from_id:
             last_id, last_date = (from_id, None)
-            logging.info("fetching from last message id={}".format(last_id))
+            log.info("fetching from last message id={}".format(last_id))
         else:
             last_id, last_date = self.db.get_last_message_id()
-            logging.info("fetching from last message id={} ({})".format(
+            log.info("fetching from last message id={} ({})".format(
                 last_id, last_date))
 
         group_id = self._get_group_id(self.config["group"])
@@ -72,7 +74,7 @@ class Sync:
                 last_date = m.date
                 n += 1
                 if n % 300 == 0:
-                    logging.info("fetched {} messages".format(n))
+                    log.info("fetched {} messages".format(n))
                     self.db.commit()
 
                 if 0 < self.config["fetch_limit"] <= n or ids:
@@ -82,7 +84,7 @@ class Sync:
             self.db.commit()
             if has:
                 last_id = m.id
-                logging.info("fetched {} messages. sleeping for {} seconds".format(
+                log.info("fetched {} messages. sleeping for {} seconds".format(
                     n, self.config["fetch_wait"]))
                 time.sleep(self.config["fetch_wait"])
             else:
@@ -91,7 +93,7 @@ class Sync:
         self.db.commit()
         if self.config.get("use_takeout", False):
             self.finish_takeout()
-        logging.info(
+        log.info(
             "finished. fetched {} messages. last message = {}".format(n, last_date))
 
     def new_client(self, session: str, config: dict):
@@ -114,17 +116,17 @@ class Sync:
                     takeout_client.get_messages("me")
                     return takeout_client
                 except errors.TakeoutInitDelayError as e:
-                    logging.info(
+                    log.info(
                         "please allow the data export request received from Telegram on your device. "
                         "you can also wait for {} seconds.".format(e.seconds))
-                    logging.info("press Enter key after allowing the data export request to continue..")
+                    log.info("press Enter key after allowing the data export request to continue..")
                     input()
-                    logging.info("trying again.. ({})".format(retry + 2))
+                    log.info("trying again.. ({})".format(retry + 2))
                 except errors.TakeoutInvalidError:
-                    logging.info("takeout invalidated. delete the session.session file and try again.")
+                    log.info("takeout invalidated. delete the session.session file and try again.")
                     raise
             else:
-                logging.info("could not initiate takeout.")
+                log.info("could not initiate takeout.")
                 raise(Exception("could not initiate takeout."))
         else:
             return client
@@ -188,7 +190,7 @@ class Sync:
                                                 reverse=True)
             return messages
         except errors.FloodWaitError as e:
-            logging.info("flood waited: have to wait {} seconds".format(e.seconds))
+            log.info("flood waited: have to wait {} seconds".format(e.seconds))
 
     def _get_user(self, u) -> User:
         tags = []
@@ -211,7 +213,7 @@ class Sync:
                 fname = self._download_avatar(u)
                 avatar = fname
             except Exception as e:
-                logging.error(
+                log.error(
                     "error downloading avatar: #{}: {}".format(u.id, e))
 
         return User(
@@ -252,10 +254,12 @@ class Sync:
             if len(self.config["media_mime_types"]) > 0:
                 if hasattr(msg, "file") and hasattr(msg.file, "mime_type") and msg.file.mime_type:
                     if msg.file.mime_type not in self.config["media_mime_types"]:
-                        logging.info("skipping media #{} / {}".format(msg.file.name, msg.file.mime_type))
+                        log.info("skipping media #{} / {}".format(msg.file.name, msg.file.mime_type))
                         return
-
-            logging.info("downloading media #{}".format(msg.id))
+            if not msg.file:
+                log.info(f"skipping downloading media {msg.id}, no file attached\n msg={msg}")
+                return
+            log.info(f"downloading media {msg.id}")
             try:
                 basename, fname, thumb = self._download_media(msg)
                 return Media(
@@ -267,8 +271,8 @@ class Sync:
                     thumb=thumb
                 )
             except Exception as e:
-                logging.error(
-                    "error downloading media: #{}: {}".format(msg.id, e))
+                log.exception(
+                    f"error downloading media: #{msg.id},\n msg={msg},\n error={e}")
         return
 
     def _download_media(self, msg) -> [str, str, str]:
@@ -313,13 +317,13 @@ class Sync:
         if os.path.exists(fpath):
             return fname
 
-        logging.info("downloading avatar #{}".format(user.id))
+        log.info("downloading avatar #{}".format(user.id))
 
         # Download the file into a container, resize it, and then write to disk.
         b = BytesIO()
         profile_photo = self.client.download_profile_photo(user, file=b)
         if profile_photo is None:
-            logging.info("user has no avatar #{}".format(user.id))
+            log.info("user has no avatar #{}".format(user.id))
             return None
 
         im = Image.open(b)
@@ -351,7 +355,7 @@ class Sync:
         try:
             entity = self.client.get_entity(group)
         except ValueError:
-            logging.critical("the group: {} does not exist,"
+            log.critical("the group: {} does not exist,"
                              " or the authorized user is not a participant!".format(group))
             # This is a critical error, so exit with code: 1
             exit(1)
