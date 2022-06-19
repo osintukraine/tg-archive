@@ -33,11 +33,25 @@ docker run --rm -it --user="$(id -u):$(id -g)" -v /home/user/sites:/sites tg-arc
 ```
 
 #### Download site data
+
 ```bash
 docker run --rm --user="$(id -u):$(id -g)" -v /home/user/sites:/sites tg-archive --config=/sites/test/config.yaml --session=/sites/session.session --sync
 ```
 
-#### Build static site (publish)
+
+**For media folder placed at build destination to avoid duplicate and copy media files.**
+**Before** downloading - create manually folder `/var/www/public/test/media` 
 ```bash
-docker run --rm --user="$(id -u):$(id -g)" -v /home/user/sites:/sites -v /var/www/public/test:/sites/test/site tg-archive --config=/sites/test/config.yaml --session=/sites/session.session --build
+docker run --rm --user="$(id -u):$(id -g)" -v /home/user/sites:/sites -v /var/www/public/test/media:/sites/test/media tg-archive --config=/sites/test/config.yaml --session=/sites/session.session --sync
+```
+
+#### Build static site (publish)
+
+```bash
+docker run --rm --user="$(id -u):$(id -g)" -v /home/user/sites:/sites -v /var/www/public/test:/sites/test/site tg-archive --config=/sites/test/config.yaml --build
+```
+
+**For media folder placed at build destination to avoid duplicate and copy media files.**
+```bash
+docker run --rm --user="$(id -u):$(id -g)" -v /home/user/sites:/sites -v /var/www/public/test:/sites/test/site -v /var/www/public/test/media:/sites/test/media tg-archive --config=/sites/test/config.yaml --build
 ```

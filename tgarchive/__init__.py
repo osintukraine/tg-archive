@@ -10,8 +10,13 @@ from .db import DB
 
 __version__ = "0.5.4"
 
-logging.basicConfig(format="%(asctime)s: %(message)s",
-                    level=logging.INFO)
+from rich.logging import RichHandler
+
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s: %(message)s", datefmt="[%X]", handlers=[RichHandler(rich_tracebacks=True,
+                                                                                     tracebacks_show_locals=True)]
+)
+log = logging.getLogger("rich")
 
 _CONFIG = {
     "api_id": os.getenv("API_ID", ""),
@@ -30,6 +35,7 @@ _CONFIG = {
     "rss_feed_entries": 100,
 
     "publish_dir": "site",
+    "incremental_builds": True,
     "site_url": "https://mysite.com",
     "static_dir": "static",
     "telegram_url": "https://t.me/{id}",
@@ -98,19 +104,19 @@ def main():
     elif args.new:
         exdir = os.path.join(os.path.dirname(__file__), "example")
         if not os.path.isdir(exdir):
-            logging.error("unable to find bundled example directory")
+            log.error("unable to find bundled example directory")
             sys.exit(1)
 
         try:
             shutil.copytree(exdir, args.path)
         except FileExistsError:
-            logging.error(
+            log.error(
                 "the directory '{}' already exists".format(args.path))
             sys.exit(1)
         except:
             raise
 
-        logging.info("created directory '{}'".format(args.path))
+        log.info("created directory '{}'".format(args.path))
 
     # Sync from Telegram.
     elif args.sync:
@@ -118,20 +124,20 @@ def main():
         from .sync import Sync
 
         if args.id and args.from_id and args.from_id > 0:
-            logging.error("pass either --id or --from-id but not both")
+            log.error("pass either --id or --from-id but not both")
             sys.exit(1)
 
         cfg = get_config(args.config)
         mode = "takeout" if cfg.get("use_takeout", False) else "standard"
 
-        logging.info("starting Telegram sync (batch_size={}, limit={}, wait={}, mode={})".format(
+        log.info("starting Telegram sync (batch_size={}, limit={}, wait={}, mode={})".format(
             cfg["fetch_batch_size"], cfg["fetch_limit"], cfg["fetch_wait"], mode
         ))
         try:
             s = Sync(cfg, args.session, DB(args.data))
             s.sync(args.id, args.from_id)
         except KeyboardInterrupt as e:
-            logging.info("sync cancelled manually")
+            log.info("sync cancelled manually")
             if cfg.get("use_takeout", False):
                 s.finish_takeout()
             sys.exit()
@@ -142,7 +148,7 @@ def main():
     elif args.build:
         from .build import Build
 
-        logging.info("building site")
+        log.info("building site")
         config = get_config(args.config)
         b = Build(config, DB(args.data), args.symlink)
         b.load_template(args.template)
@@ -150,7 +156,7 @@ def main():
             b.load_rss_template(args.rss_template)
         b.build()
 
-        logging.info("published to directory '{}'".format(config["publish_dir"]))
+        log.info("published to directory '{}'".format(config["publish_dir"]))
 
     elif args.session:
         # Import because the Telegram client import is quite heavy.
@@ -158,4 +164,4 @@ def main():
 
         cfg = get_config(args.config)
         s = Sync(cfg, args.session, None)
-        logging.info(f"Done with: {args.session}")
+        log.info(f"Done with: {args.session}")

@@ -16,6 +16,8 @@ from . import __version__
 
 _NL2BR = re.compile(r"\n\n+")
 
+log = logging.getLogger("rich")
+
 
 class Build:
     config = {}
@@ -41,7 +43,7 @@ class Build:
 
         timeline = list(self.db.get_timeline())
         if len(timeline) == 0:
-            logging.info("no data found to publish site")
+            log.info("no data found to publish site")
             quit()
 
         for month in timeline:
@@ -85,8 +87,12 @@ class Build:
                 if self.config["publish_rss_feed"]:
                     rss_entries.extend(messages)
 
-                self._render_page(messages, month, dayline,
-                                  fname, page, total_pages)
+                filename_rendered_exists = Path(os.path.join(self.config["publish_dir"], fname)).exists()
+                if self.config["incremental_builds"] and len(messages) == self.config["per_page"]\
+                        and filename_rendered_exists:
+                    log.info(f"Incremental builds: file {fname} exists. Skip rendering.")
+                else:
+                    self._render_page(messages, month, dayline, fname, page, total_pages)
 
         # The last page chronologically is the latest page. Make it index.
         if fname:
@@ -183,33 +189,38 @@ class Build:
     def _create_publish_dir(self):
         pubdir = self.config["publish_dir"]
 
-        # Clear the output directory.
-        if os.path.exists(pubdir):
-            for path in Path(pubdir).iterdir():
-                if path.is_file():
-                    path.unlink()
-                elif path.is_dir():
-                    shutil.rmtree(path)
+        # Clear the output directory HTML files, if not incremental_builds
+        if not self.config["incremental_builds"]:
+            if os.path.exists(pubdir):
+                for path in Path(pubdir).iterdir():
+                    if path.is_file():
+                        path.unlink()
 
         # Re-create the output directory.
         Path(pubdir).mkdir(parents=True, exist_ok=True)
 
         # Copy the static directory into the output directory.
-        for f in [self.config["static_dir"]]:
-            target = os.path.join(pubdir, f)
-            if self.symlink:
-                os.symlink(os.path.abspath(f), target)
-            elif os.path.isfile(f):
-                shutil.copyfile(f, target)
-            else:
-                shutil.copytree(f, target)
+        static_dir = self.config["static_dir"]
+        if not os.path.exists(os.path.join(pubdir, os.path.basename(static_dir))):
+            for f in [static_dir]:
+                target = os.path.join(pubdir, f)
+                if self.symlink:
+                    os.symlink(os.path.abspath(f), target)
+                elif os.path.isfile(f):
+                    shutil.copyfile(f, target)
+                else:
+                    shutil.copytree(f, target)
 
         # If media downloading is enabled, copy/symlink the media directory.
         mediadir = self.config["media_dir"]
-        if os.path.exists(mediadir):
+        same_dir = os.path.abspath(mediadir) == os.path.abspath(os.path.join(pubdir, os.path.basename(mediadir)))
+        if os.path.exists(mediadir) and not same_dir:
             if self.symlink:
                 os.symlink(os.path.abspath(mediadir), os.path.join(
                     pubdir, os.path.basename(mediadir)))
             else:
-                shutil.copytree(mediadir, os.path.join(
-                    pubdir, os.path.basename(mediadir)))
+                try:
+                    shutil.copytree(mediadir, os.path.join(
+                        pubdir, os.path.basename(mediadir)), dirs_exist_ok=True)
+                except Exception as e:
+                    ...

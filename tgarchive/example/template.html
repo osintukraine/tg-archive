@@ -23,7 +23,9 @@
 
 	<link rel="preconnect" href="https://fonts.gstatic.com">
 	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet"> 
-	<link href="static/style.css" rel="stylesheet" type="text/css" />	
+	<link href="static/style.css" rel="stylesheet" type="text/css" />
+	<script src="static/main.js"></script>
+	<script src="static/html5media.min.js"></script>
 </head>
 <body>
 
@@ -156,15 +158,29 @@
 												{% endfor %}
 											</ul>
 										</div>
-									{% elif m.media.thumb %}
-										<a href="{{ config.media_dir }}/{{ m.media.url }}">
-											<img src="{{ config.media_dir }}/{{ m.media.thumb }}" class="thumb" /><br />
-											<span class="filename">{{ m.media.title }}</span>
-										</a>
+									{% elif "video" in m.media.type %}
+										<video src="{{ config.media_dir }}/{{ m.media.url }}"
+											   title="{{ m.media.title }}"
+											   poster="{{ config.media_dir }}/{{ m.media.thumb }}"
+											   controls preload>
+										</video>
+									{% elif "audio" in m.media.type %}
+										<audio src="{{ config.media_dir }}/{{ m.media.url }}"
+											   title="{{ m.media.title }}"
+											   controls preload>
+										</audio>
+									{% elif "image" in m.media.type %}
+										<img src="{{ config.media_dir }}/{{ m.media.url }}"
+											 title="{{ m.media.title }}" />
 									{% else %}
-									<embed type="{{ m.media.type }}" src="{{ config.media_dir }}/{{ m.media.url }}">
-										<span class="filename">{{ m.media.title }}</span>
-									</embed>
+										<embed type="{{ m.media.type }}" src="{{ config.media_dir }}/{{ m.media.url }}">
+											{% if m.media.thumb %}
+											<a href="{{ config.media_dir }}/{{ m.media.url }}">
+												<img src="{{ config.media_dir }}/{{ m.media.thumb }}" class="thumb" /><br />
+											</a>
+											{% endif %}
+											<span class="filename">{{ m.media.title }}</span>
+										</embed>
 									{% endif %}
 								</div>
 							{% endif %}
@@ -199,6 +215,5 @@
 		</section>
 	</div><!-- container -->
 </div>
-<script src="static/main.js"></script>
 </body>
 </html>
