@@ -47,23 +47,11 @@
 					</p>
 				</div>
 			</header>
-			<ul class="timeline index">
-		        {% for year, months in timeline.items() | reverse %}
-		        <li class="">
-		        	<h3 class="year"><a href="{{ months[0].slug }}.html">{{ year }}</a></h3>
-		        	<ul class="months">
-		        		{% for m in months | reverse %}
-		        			<li class="{% if m.slug == month.slug %}selected{% endif %}">
-		        				<a href="{{ m.slug }}.html">
-		        					{{ m.label }}
-		        					<span class="count">({{ m.count }})
-		        				</span></a>
-		        			</li>
-		        		{% endfor %}
-		        	</ul>
-		        </li>
-		        {% endfor %}
-			</ul>
+			<script src="./timeline-index.js"></script>
+			<script>
+				var element = document.getElementById("timeline-index-li-{{ month.slug }}");
+				element.classList.add("selected");
+			</script>
 
 			<footer class="footer">
 				{% if config.publish_rss_feed %}
@@ -75,12 +63,8 @@
 
 		<section class="content">
 			{% if pagination.total > 1 %}
-				<ul class="pagination top">
-					{% for p in range(1, pagination.total + 1) %}
-						<li class="{% if pagination.current == p %}active{% endif %}">
-							<a href="{{ month.slug }}{% if p > 1 %}_{{ p }}{% endif %}.html">{{ p }}</a>
-						</li>
-					{% endfor %}
+				<ul id="pagination-top" class="pagination top">
+					<script src="./pagination-{{ month.slug }}.js"></script>
 				</ul>
 			{% endif %}
 
@@ -88,9 +72,7 @@
 				{% for m in messages %}
 					{% set day = m.date.strftime("%d %B %Y") %}
 					{% if loop.index0 == 0 or day != messages[loop.index0 - 1].date.strftime("%d %B %Y") %}
-						<li class="day" id="{{ m.date.strftime('%Y-%m-%d') }}">
-							<span class="title">{{ day }} <span class="count">({{ dayline[m.date.strftime("%Y-%m-%d")].count }} messages)</span></span>
-						</li>
+						<script src="./day-counter-{{ m.date.strftime('%Y-%m-%d') }}.js"></script>
 					{% endif %}
 					<li class="message type-{{ m.type }}" id="{{ m.id }}">
 						<div class="avatar">
@@ -170,14 +152,14 @@
 											   controls preload>
 										</audio>
 									{% elif "image" in m.media.type %}
-										<img src="{{ config.media_dir }}/{{ m.media.url }}"
-											 title="{{ m.media.title }}" />
+									<img src="{{ config.media_dir }}/{{ m.media.url }}"
+										   title="{{ m.media.title }}" />
 									{% else %}
 										<embed type="{{ m.media.type }}" src="{{ config.media_dir }}/{{ m.media.url }}">
 											{% if m.media.thumb %}
-											<a href="{{ config.media_dir }}/{{ m.media.url }}">
-												<img src="{{ config.media_dir }}/{{ m.media.thumb }}" class="thumb" /><br />
-											</a>
+												<a href="{{ config.media_dir }}/{{ m.media.url }}">
+													<img src="{{ config.media_dir }}/{{ m.media.thumb }}" class="thumb" /><br />
+												</a>
 											{% endif %}
 											<span class="filename">{{ m.media.title }}</span>
 										</embed>
@@ -190,27 +172,22 @@
 			</ul>
 
 			{% if pagination.total > 1 %}
-				<ul class="pagination bottom">
-					{% for p in range(1, pagination.total + 1) %}
-						<li class="{% if pagination.current == p %}active{% endif %}">
-							<a href="{{ month.slug }}{% if p > 1 %}_{{ p }}{% endif %}.html">{{ p }}</a>
-						</li>
-					{% endfor %}
+				<ul id="pagination-bottom" class="pagination bottom">
+					<script src="./pagination-{{ month.slug }}.js"></script>
 				</ul>
 			{% endif %}
+
+			<script>
+				const elements = document.getElementsByClassName("class-pagination-{{ pagination.current }}");
+				for (const element of elements) {
+					element.classList.add("active");
+				}
+			</script>
 		</section><!-- content -->
 
 		<section class="dayline">
 			{% if config.show_day_index %}
-				<ul class="index">
-				{% for _, d in dayline.items() %}
-					<li class="day-{{ d.slug }}">
-						<a href="{{ make_filename(month, d.page) }}#{{ d.slug }}">
-							{{ d.date.strftime("%d %b %Y") }} <span class="count">({{ d.count }})</span>
-						</a>
-					</li>
-				{% endfor %}
-				</ul>
+				<script src="./dayline-{{ month.slug }}.js"></script>
 			{% endif %}
 		</section>
 	</div><!-- container -->
