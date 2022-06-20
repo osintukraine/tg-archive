@@ -37,6 +37,11 @@ class Build:
         self.page_ids = {}
         self.timeline = OrderedDict()
 
+        self._day_counter_template: Template = Build._load_template_file("day-counter-template.js")
+        self._dayline_template: Template = Build._load_template_file("dayline-template.js")
+        self._timeline_index_template: Template = Build._load_template_file("timeline-index-template.js")
+        self._pagination_template: Template = Build._load_template_file("pagination-template.js")
+
     def build(self):
         # (Re)create the output directory.
         self._create_publish_dir()
@@ -51,21 +56,47 @@ class Build:
                 self.timeline[month.date.year] = []
             self.timeline[month.date.year].append(month)
 
+        self._render_timeline_index(self.timeline)
+
         # Queue to store the latest N items to publish in the RSS feed.
         rss_entries = deque([], self.config["rss_feed_entries"])
         fname = None
         for month in timeline:
             # Get the days + message counts for the month.
             dayline = OrderedDict()
+            d = None
+            prev_d = None
+            rendered = False
             for d in self.db.get_dayline(month.date.year, month.date.month, self.config["per_page"]):
                 dayline[d.slug] = d
+                fname = f"day-counter-{d.slug}.js"
+                filename_rendered_exists = Path(os.path.join(self.config["publish_dir"], fname)).exists()
+                if self.config["incremental_builds"] and filename_rendered_exists:
+                    log.info(f"Incremental builds: file {fname} exists. Skip rendering.")
+                    prev_d = d
+                else:
+                    rendered = True
+                    self._render_day_counter(d)
+                    if prev_d and not filename_rendered_exists:
+                        self._render_day_counter(prev_d)
+                        prev_d = None
 
-            # Paginate and fetch messages for the month until the end..
+            if self.config["incremental_builds"] and not rendered:
+                # always rebuild last day counter page
+                self._render_day_counter(d)
+
+            # render dayline
+            if self.config["show_day_index"]:
+                self._render_dayline(dayline, month)
+
+            # Paginate and fetch messages for the month until the end...
             page = 0
             last_id = 0
             total = self.db.get_message_count(
                 month.date.year, month.date.month)
             total_pages = math.ceil(total / self.config["per_page"])
+
+            self._render_pagination(month, total_pages)
 
             while True:
                 messages = list(self.db.get_messages(month.date.year, month.date.month,
@@ -108,16 +139,21 @@ class Build:
 
     def load_template(self, fname):
         with open(fname, "r") as f:
-            self.template = Template(f.read())
+            self.template = Build._load_template_file(fname)
 
     def load_rss_template(self, fname):
         with open(fname, "r") as f:
-            self.rss_template = Template(f.read())
+            self.rss_template = Build._load_template_file(fname)
 
     def make_filename(self, month, page) -> str:
         fname = "{}{}.html".format(
             month.slug, "_" + str(page) if page > 1 else "")
         return fname
+
+    @staticmethod
+    def _load_template_file(file_name) -> Template:
+        with open(file_name, "r") as f:
+            return Template(f.read())
 
     def _render_page(self, messages, month, dayline, fname, page, total_pages):
         html = self.template.render(config=self.config,
@@ -131,6 +167,38 @@ class Build:
                                     make_filename=self.make_filename,
                                     nl2br=self._nl2br)
 
+        with open(os.path.join(self.config["publish_dir"], fname), "w", encoding="utf8") as f:
+            f.write(html)
+
+    def _render_day_counter(self, day):
+        html = self._day_counter_template.render(
+                                    day=day
+        )
+        fname = f"day-counter-{day.slug}.js"
+        with open(os.path.join(self.config["publish_dir"], fname), "w", encoding="utf8") as f:
+            f.write(html)
+
+    def _render_dayline(self, dayline, month):
+        html = self._dayline_template.render(
+            dayline=dayline, make_filename=self.make_filename, month=month
+        )
+        fname = f"dayline-{month.slug}.js"
+        with open(os.path.join(self.config["publish_dir"], fname), "w", encoding="utf8") as f:
+            f.write(html)
+
+    def _render_timeline_index(self, timeline):
+        html = self._timeline_index_template.render(
+            timeline=timeline
+        )
+        fname = f"timeline-index.js"
+        with open(os.path.join(self.config["publish_dir"], fname), "w", encoding="utf8") as f:
+            f.write(html)
+
+    def _render_pagination(self, month, total_pages):
+        html = self._pagination_template.render(
+            month=month, total_pages=total_pages
+        )
+        fname = f"pagination-{month.slug}.js"
         with open(os.path.join(self.config["publish_dir"], fname), "w", encoding="utf8") as f:
             f.write(html)
 
