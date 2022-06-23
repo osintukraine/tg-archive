@@ -24,6 +24,10 @@ body {
 	min-width: 320px;
 }
 
+img {
+max-width: 100%;
+}
+
 input, textarea, select {
 	font-family: Inter, "Helvetica Neue", "Segoe UI", sans-serif;
 	border: 1px solid #ddd;
@@ -131,11 +135,11 @@ ul {
 }
 .sidebar {
 	background: #f6f6f6;
-	padding: 30px 30px 30px 15%;
+	padding: 30px 30px 30px;
 	position: fixed;
 	top: 0;
 	bottom: 0;
-	width: 30%;
+	width: 15%;
 	overflow-y: auto;
 }
 	.sidebar:target {
