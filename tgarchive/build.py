@@ -290,8 +290,7 @@ class Build:
 
         # If media downloading is enabled, copy/symlink the media directory.
         mediadir = self.config["media_dir"]
-        same_dir = os.path.abspath(mediadir) == os.path.abspath(os.path.join(pubdir, os.path.basename(mediadir)))
-        if os.path.exists(mediadir) and not same_dir:
+        if not os.path.exists(os.path.abspath(os.path.join(pubdir, os.path.basename(mediadir)))):
             if self.symlink:
                 os.symlink(os.path.abspath(mediadir), os.path.join(
                     pubdir, os.path.basename(mediadir)))
