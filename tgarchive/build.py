@@ -46,6 +46,8 @@ class Build:
         # (Re)create the output directory.
         self._create_publish_dir()
 
+        log.info("Start building.")
+
         timeline = list(self.db.get_timeline())
         if len(timeline) == 0:
             log.info("no data found to publish site")
@@ -156,6 +158,7 @@ class Build:
             return Template(f.read())
 
     def _render_page(self, messages, month, dayline, fname, page, total_pages):
+        log.info(f"Rendering: : {fname}")
         html = self.template.render(config=self.config,
                                     timeline=self.timeline,
                                     dayline=dayline,
@@ -171,38 +174,43 @@ class Build:
             f.write(html)
 
     def _render_day_counter(self, day):
+        fname = f"day-counter-{day.slug}.js"
+        log.info(f"Rendering: : {fname}")
         html = self._day_counter_template.render(
                                     day=day
         )
-        fname = f"day-counter-{day.slug}.js"
         with open(os.path.join(self.config["publish_dir"], fname), "w", encoding="utf8") as f:
             f.write(html)
 
     def _render_dayline(self, dayline, month):
+        fname = f"dayline-{month.slug}.js"
+        log.info(f"Rendering: : {fname}")
         html = self._dayline_template.render(
             dayline=dayline, make_filename=self.make_filename, month=month
         )
-        fname = f"dayline-{month.slug}.js"
         with open(os.path.join(self.config["publish_dir"], fname), "w", encoding="utf8") as f:
             f.write(html)
 
     def _render_timeline_index(self, timeline):
+        fname = f"timeline-index.js"
+        log.info(f"Rendering: : {fname}")
         html = self._timeline_index_template.render(
             timeline=timeline
         )
-        fname = f"timeline-index.js"
         with open(os.path.join(self.config["publish_dir"], fname), "w", encoding="utf8") as f:
             f.write(html)
 
     def _render_pagination(self, month, total_pages):
+        fname = f"pagination-{month.slug}.js"
+        log.info(f"Rendering: : {fname}")
         html = self._pagination_template.render(
             month=month, total_pages=total_pages
         )
-        fname = f"pagination-{month.slug}.js"
         with open(os.path.join(self.config["publish_dir"], fname), "w", encoding="utf8") as f:
             f.write(html)
 
     def _build_rss(self, messages, rss_file, atom_file):
+        log.info(f"Building RSS")
         f = FeedGenerator()
         f.id(self.config["site_url"])
         f.generator(
@@ -255,6 +263,7 @@ class Build:
         return _NL2BR.sub("\n\n", s).replace("\n", "\n<br />")
 
     def _create_publish_dir(self):
+        log.info("Creating publish tree if needed.")
         pubdir = self.config["publish_dir"]
 
         # Clear the output directory HTML files, if not incremental_builds
@@ -281,8 +290,7 @@ class Build:
 
         # If media downloading is enabled, copy/symlink the media directory.
         mediadir = self.config["media_dir"]
-        same_dir = os.path.abspath(mediadir) == os.path.abspath(os.path.join(pubdir, os.path.basename(mediadir)))
-        if os.path.exists(mediadir) and not same_dir:
+        if not os.path.exists(os.path.abspath(os.path.join(pubdir, os.path.basename(mediadir)))):
             if self.symlink:
                 os.symlink(os.path.abspath(mediadir), os.path.join(
                     pubdir, os.path.basename(mediadir)))
