@@ -1,4 +1,16 @@
 (function() {
+	
+		document.addEventListener("DOMContentLoaded", function(event) {
+		const observer = window.lozad('.lozad'/*, {
+			load: function(el) {
+				console.log('loading element');
+				el.src = el.getAttribute('data-src');
+			}
+		}*/);
+		observer.observe();
+	});
+
+
 	// Hide the open burger menu when clicking nav links. 
 	const burger = document.querySelector("#burger");
 	document.querySelectorAll(".timeline a, .dayline a").forEach((e) => {
