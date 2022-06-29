@@ -26,6 +26,8 @@
 	<link href="static/style.css" rel="stylesheet" type="text/css" />
 	<script src="static/main.js"></script>
 	<script src="static/html5media.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/lozad/dist/lozad.min.js"></script>
+
 </head>
 <body>
 
@@ -141,7 +143,7 @@
 											</ul>
 										</div>
 									{% elif "video" in m.media.type %}
-										<video src="{{ config.media_dir }}/{{ m.media.url }}"
+										<video class="lozad" data-src="{{ config.media_dir }}/{{ m.media.url }}"
 											   title="{{ m.media.title }}"
 											   poster="{{ config.media_dir }}/{{ m.media.thumb }}"
 											   controls preload>
@@ -152,7 +154,7 @@
 											   controls preload>
 										</audio>
 									{% elif "image" in m.media.type %}
-									<img src="{{ config.media_dir }}/{{ m.media.url }}"
+									<img class="lozad" data-src="{{ config.media_dir }}/{{ m.media.url }}"
 										   title="{{ m.media.title }}" />
 									{% else %}
 										<embed type="{{ m.media.type }}" src="{{ config.media_dir }}/{{ m.media.url }}">
