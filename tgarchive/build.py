@@ -5,7 +5,7 @@ import os
 import re
 import shutil
 import magic
-from datetime import timezone
+from datetime import timezone, datetime
 from pathlib import Path
 
 from feedgen.feed import FeedGenerator
@@ -47,6 +47,8 @@ class Build:
         self._create_publish_dir()
 
         log.info("Start building.")
+
+        self.config['build_timestamp'] = int(datetime.timestamp(datetime.now(timezone.utc)))
 
         timeline = list(self.db.get_timeline())
         if len(timeline) == 0:

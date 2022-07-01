@@ -24,13 +24,11 @@
 	<link rel="preconnect" href="https://fonts.gstatic.com">
 	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet"> 
 	<link href="static/style.css" rel="stylesheet" type="text/css" />
-	<script src="static/main.js"></script>
 	<script src="static/html5media.min.js"></script>
-	<script src="https://cdn.jsdelivr.net/npm/lozad/dist/lozad.min.js"></script>
-
+	<script src="static/lozad.min.js"></script>
+	<script src="static/main.js?{{ config.build_timestamp }}"></script>
 </head>
 <body>
-
 <div class="wrap">
 	<div class="container">
 		<nav class="nav">
@@ -49,7 +47,7 @@
 					</p>
 				</div>
 			</header>
-			<script src="./timeline-index.js"></script>
+			<script src="./timeline-index.js?{{ config.build_timestamp }}"></script>
 			<script>
 				var element = document.getElementById("timeline-index-li-{{ month.slug }}");
 				element.classList.add("selected");
@@ -66,7 +64,7 @@
 		<section class="content">
 			{% if pagination.total > 1 %}
 				<ul id="pagination-top" class="pagination top">
-					<script src="./pagination-{{ month.slug }}.js"></script>
+					<script src="./pagination-{{ month.slug }}.js?{{ config.build_timestamp }}"></script>
 				</ul>
 			{% endif %}
 
@@ -74,7 +72,7 @@
 				{% for m in messages %}
 					{% set day = m.date.strftime("%d %B %Y") %}
 					{% if loop.index0 == 0 or day != messages[loop.index0 - 1].date.strftime("%d %B %Y") %}
-						<script src="./day-counter-{{ m.date.strftime('%Y-%m-%d') }}.js"></script>
+						<script src="./day-counter-{{ m.date.strftime('%Y-%m-%d') }}.js?{{ config.build_timestamp }}"></script>
 					{% endif %}
 					<li class="message type-{{ m.type }}" id="{{ m.id }}">
 						<div class="avatar">
@@ -146,12 +144,12 @@
 										<video class="lozad" data-src="{{ config.media_dir }}/{{ m.media.url }}"
 											   title="{{ m.media.title }}"
 											   poster="{{ config.media_dir }}/{{ m.media.thumb }}"
-											   controls preload>
+											   controls>
 										</video>
 									{% elif "audio" in m.media.type %}
-										<audio src="{{ config.media_dir }}/{{ m.media.url }}"
+										<audio class="lozad" data-src="{{ config.media_dir }}/{{ m.media.url }}"
 											   title="{{ m.media.title }}"
-											   controls preload>
+											   controls>
 										</audio>
 									{% elif "image" in m.media.type %}
 									<img class="lozad" data-src="{{ config.media_dir }}/{{ m.media.url }}"
@@ -175,7 +173,7 @@
 
 			{% if pagination.total > 1 %}
 				<ul id="pagination-bottom" class="pagination bottom">
-					<script src="./pagination-{{ month.slug }}.js"></script>
+					<script src="./pagination-{{ month.slug }}.js?{{ config.build_timestamp }}"></script>
 				</ul>
 			{% endif %}
 
@@ -189,10 +187,11 @@
 
 		<section class="dayline">
 			{% if config.show_day_index %}
-				<script src="./dayline-{{ month.slug }}.js"></script>
+				<script src="./dayline-{{ month.slug }}.js?{{ config.build_timestamp }}"></script>
 			{% endif %}
 		</section>
 	</div><!-- container -->
 </div>
+
 </body>
 </html>

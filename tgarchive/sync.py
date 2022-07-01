@@ -288,8 +288,12 @@ class Sync:
         fpath = self.client.download_media(msg, file=tempfile.gettempdir())
         if fpath:
             basename = os.path.basename(fpath)
-            newname = "{}.{}".format(msg.id, self._get_file_ext(basename))
-            shutil.move(fpath, os.path.join(self.config["media_dir"], newname))
+            subfolder = ""
+            if self.config['media_datetime_subdir']:
+                subfolder = msg.date.strftime(self.config['media_datetime_subdir'])
+                Path(self.config["media_dir"], subfolder).mkdir(parents=True, exist_ok=True)
+            newname = str(Path(subfolder, f"{msg.id}.{self._get_file_ext(basename)}"))
+            shutil.move(fpath, str(Path(self.config["media_dir"], newname)))
 
         # If it's a photo, download the thumbnail.
         tname = None
