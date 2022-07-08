@@ -4,6 +4,8 @@
 
 **tg-archive** is a tool for exporting Telegram group chats into static websites, preserving chat history like mailing list archives.
 
+**OSINTukraine** use case instruction here : https://git.osintukraine.com/andrzej/tg-archive/src/branch/master/README.docker.md
+
 
 ## Preview
 The [@fossunited](https://tg.fossunited.org) Telegram group archive.
