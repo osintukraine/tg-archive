@@ -11,7 +11,7 @@ from pathlib import Path
 from feedgen.feed import FeedGenerator
 from jinja2 import Template
 
-from .db import User, Message
+from .db import DB, User, Message
 from . import __version__
 
 _NL2BR = re.compile(r"\n\n+")
@@ -24,12 +24,12 @@ class Build:
     template = None
     db = None
 
-    def __init__(self, config, db, symlink):
+    def __init__(self, config, db: DB, symlink):
         self.config = config
-        self.db = db
+        self.db: DB = db
         self.symlink = symlink
 
-        self.rss_template: Template = None
+        self.rss_template: Template or None = None
 
         # Map of all message IDs across all months and the slug of the page
         # in which they occur (paginated), used to link replies to their
@@ -49,8 +49,9 @@ class Build:
         log.info("Start building.")
 
         self.config['build_timestamp'] = int(datetime.timestamp(datetime.now(timezone.utc)))
+        new_on_top = self.config["new_on_top"]
 
-        timeline = list(self.db.get_timeline())
+        timeline = list(self.db.get_timeline(new_on_top))
         if len(timeline) == 0:
             log.info("no data found to publish site")
             quit()
@@ -71,7 +72,7 @@ class Build:
             d = None
             prev_d = None
             rendered = False
-            for d in self.db.get_dayline(month.date.year, month.date.month, self.config["per_page"]):
+            for d in self.db.get_dayline(month.date.year, month.date.month, new_on_top, self.config["per_page"]):
                 dayline[d.slug] = d
                 fname = f"day-counter-{d.slug}.js"
                 filename_rendered_exists = Path(os.path.join(self.config["publish_dir"], fname)).exists()
@@ -103,7 +104,7 @@ class Build:
             self._render_pagination(month, total_pages)
 
             while True:
-                messages = list(self.db.get_messages(month.date.year, month.date.month,
+                messages = list(self.db.get_messages(month.date.year, month.date.month, new_on_top,
                                                      last_id, self.config["per_page"]))
 
                 if len(messages) == 0:
