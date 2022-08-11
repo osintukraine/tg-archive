@@ -39,7 +39,10 @@ class Build:
 
         self._day_counter_template: Template = Build._load_template_file("day-counter-template.js")
         self._dayline_template: Template = Build._load_template_file("dayline-template.js")
-        self._timeline_index_template: Template = Build._load_template_file("timeline-index-template.js")
+        if self.config["new_on_top"]:
+            self._timeline_index_template: Template = Build._load_template_file("timeline-index-template-new-on-top.js")
+        else:
+            self._timeline_index_template: Template = Build._load_template_file("timeline-index-template.js")
         self._pagination_template: Template = Build._load_template_file("pagination-template.js")
 
     def build(self):
@@ -66,6 +69,7 @@ class Build:
         # Queue to store the latest N items to publish in the RSS feed.
         rss_entries = deque([], self.config["rss_feed_entries"])
         fname = None
+        index_page = None
         for month in timeline:
             # Get the days + message counts for the month.
             dayline = OrderedDict()
@@ -96,7 +100,7 @@ class Build:
 
             # Paginate and fetch messages for the month until the end...
             page = 0
-            last_id = 0
+            last_id = 1000_000_000_000_000 if new_on_top else 0
             total = self.db.get_message_count(
                 month.date.year, month.date.month)
             total_pages = math.ceil(total / self.config["per_page"])
@@ -114,6 +118,11 @@ class Build:
 
                 page += 1
                 fname = self.make_filename(month, page)
+                if new_on_top:
+                    if index_page is None:
+                        index_page = fname
+                else:
+                    index_page = fname
 
                 # Collect the message ID -> page name for all messages in the set
                 # to link to replies in arbitrary positions across months, paginated pages.
@@ -131,11 +140,11 @@ class Build:
                     self._render_page(messages, month, dayline, fname, page, total_pages)
 
         # The last page chronologically is the latest page. Make it index.
-        if fname:
+        if index_page:
             if self.symlink:
-                os.symlink(fname, os.path.join(self.config["publish_dir"], "index.html"))
+                os.symlink(index_page, os.path.join(self.config["publish_dir"], "index.html"))
             else:
-                shutil.copy(os.path.join(self.config["publish_dir"], fname),
+                shutil.copy(os.path.join(self.config["publish_dir"], index_page),
                             os.path.join(self.config["publish_dir"], "index.html"))
 
         # Generate RSS feeds.

@@ -26,7 +26,7 @@ _CONFIG = {
     "avatar_size": [64, 64],
     "download_media": False,
     "media_dir": "media",
-    "media_datetime_subdir": "",
+    "media_datetime_subdir": "", # can be i.e. date time like "%Y-%m-%d"
     "media_mime_types": [],
     "fetch_batch_size": 2000,
     "fetch_wait": 5,
@@ -37,6 +37,7 @@ _CONFIG = {
 
     "publish_dir": "site",
     "incremental_builds": True,
+    "new_on_top": True,
     "site_url": "https://mysite.com",
     "static_dir": "static",
     "telegram_url": "https://t.me/{id}",
