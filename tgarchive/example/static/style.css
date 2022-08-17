@@ -1,5 +1,5 @@
 :root {
-	--primary: #0055d4;
+	--primary: #0d0d0d;
 	--light: #888;
 	--lighter: #bbb;
 
@@ -13,23 +13,24 @@
 }
 html, body {
 	padding: 0;
-	margin: 0;
-}
-body {
-	background: #fff;
-	font-family: Inter, "Helvetica Neue", "Segoe UI", sans-serif;
-	font-size: 15px;
-	line-height: 23px;
-	color: #333;
-	min-width: 320px;
 }
 
-img {
-max-width: 100%;
+img { 
+width: auto;
+max-height: 400px;
+}
+
+body {
+	background: #D6D6D6;
+	font-family: "Calibri", "Segoe UI", sans-serif;
+	font-size: 1em;
+	line-height: 1.5em;
+	color: #111;
+	min-width: 520px;
 }
 
 input, textarea, select {
-	font-family: Inter, "Helvetica Neue", "Segoe UI", sans-serif;
+	font-family: "Calibri", "Segoe UI", sans-serif;
 	border: 1px solid #ddd;
 	padding: 10px 15px;
 	border-radius: 3px;
@@ -96,8 +97,8 @@ ul {
 
 		position: fixed;
 		top: 0;
-		left: 0;
-		right: 0;
+		left: auto;
+		right: auto;
 		z-index: 1000;
 	}
 		.burger {
@@ -134,12 +135,13 @@ ul {
 	display: flex;
 }
 .sidebar {
-	background: #f6f6f6;
+	background: #d6d6d6;
+  margin: 0 auto 20px auto;
 	padding: 30px 30px 30px;
 	position: fixed;
 	top: 0;
 	bottom: 0;
-	width: 15%;
+	width: 15%;  
 	overflow-y: auto;
 }
 	.sidebar:target {
@@ -177,7 +179,8 @@ ul {
 
 .dayline {
 	flex: 20%;
-	padding: 30px 30px 30px 60px;
+	padding: 30px 30px 30px 60px;     
+	background: #d6d6d6;
 }
 	.dayline ul {
 		position: sticky;
@@ -188,11 +191,11 @@ ul {
 	}
 
 .content {
-	background: #fff;
-	flex: 50%;
-	margin-left: 30%;
-	padding: 30px;
-	min-height: 100vh;
+background: #eee;
+flex: 65%;
+margin: 0 10% 0 20%;
+padding: 15px;
+min-height: 100vh;
 }
 
 div.body > div.text {
@@ -223,17 +226,21 @@ div.body > div.text {
 	}
 
 	/* Individual message block */
-	.messages .message {
-		display: flex;
-		margin-bottom: 35px;
+	.messages .message {  
+  display: flex;
+  margin-bottom: 35px;
+  margin: 15px 1%;
+  width: 100%;
+  padding: 5%;
+  border-bottom: 3px solid #dedede;
 	}
 	.messages .message:hover {
 		background: #fcfcfc;
 	}
 	.messages .message:target {
 		background: #f6f6f6;
-		border-top: 5px solid var(--primary);
-		padding: 15px;
+		border-top: 3px solid var(--primary);
+		padding: 0 15px;
 	}
 	.messages .avatar {
 		background: #eee;
@@ -251,12 +258,14 @@ div.body > div.text {
 		}
 
 	.messages .meta {
-		color: var(--light);
+		color: black;
 		font-size: var(--size-small);
 		line-height: var(--size-small);
 		margin-bottom: 10px;
 		display: flex;
 		justify-content: space-between;
+    background-color: #FFC90D;
+    padding: 8px 5px;
 	}
 		.messages .meta .username {
 			margin-right: auto;
@@ -264,7 +273,7 @@ div.body > div.text {
 		}
 		.messages .meta .reply,
 		.messages .meta .id {
-			color: var(--light);
+			color: #337EDF;
 		}
 		.messages .meta .reply,
 		.messages .meta .id,
@@ -275,16 +284,20 @@ div.body > div.text {
 	/* Body area */
 	.messages .body {
 		flex: 90%;
+    margin: 5px 20px;
+    padding: 0 0 20px 0;
 	}
+  
+  
 	.messages .media {
-	    padding: 5px 15px;
-	    margin: 10px 0 0 15px;
-	    border-left: 3px solid #ddd;
+      margin: 10px auto 0 auto; 
+      max-height: 400px;
+      width: auto;   
 	}
 		.messages .media .thumb {
-			max-height: 150px;
+			max-height: 250px;
 			width: auto;
-		}
+	}
 
 	.messages .poll .title {
 		margin: 0;
@@ -312,22 +325,32 @@ div.body > div.text {
 		font-style: italic;
 	}
 
+  .lozad {
+  max-height: 400px;
+  width: auto;  
+  margin: 0px auto; 
+  }
+
+
 .pagination {
-	text-align: right;
+	text-align: center;
 }
 	.pagination li {
 		display: inline-block;
-		margin: 0 15px 0 0;
+		margin: 10px;
 	}
 	.pagination .active a {
-		color: var(--primary);
+		color: #0055D4;
 		border-bottom: 2px solid var(--primary);
 	}
 	.pagination.bottom {
 		margin-top: 30px;
 	}
 	.pagination.top {
-		margin-bottom: 30px;
+		margin: 40px auto;
+    position: sticky;
+    top:0;
+    background-color: #dedede;  
 	}
 
 @media(max-width: 1350px) {
@@ -382,4 +405,25 @@ div.body > div.text {
 	.sidebar .index {
 		position: relative;
 	}
+}
+
+.alert {
+  padding: 20px;
+  background-color: #f44336;
+  color: white;
+}
+
+.closebtn {
+  margin-left: 15px;
+  color: white;
+  font-weight: bold;
+  float: right;
+  font-size: 22px;
+  line-height: 20px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.closebtn:hover {
+  color: black;
 }
