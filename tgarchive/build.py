@@ -38,12 +38,14 @@ class Build:
         self.timeline = OrderedDict()
 
         self._day_counter_template: Template = Build._load_template_file("day-counter-template.js")
-        self._dayline_template: Template = Build._load_template_file("dayline-template.js")
         if self.config["new_on_top"]:
+            self._dayline_template: Template = Build._load_template_file("dayline-template-new-on-top.js")
             self._timeline_index_template: Template = Build._load_template_file("timeline-index-template-new-on-top.js")
+            self._pagination_template: Template = Build._load_template_file("pagination-template-new-on-top.js")
         else:
+            self._dayline_template: Template = Build._load_template_file("dayline-template.js")
             self._timeline_index_template: Template = Build._load_template_file("timeline-index-template.js")
-        self._pagination_template: Template = Build._load_template_file("pagination-template.js")
+            self._pagination_template: Template = Build._load_template_file("pagination-template.js")
 
     def build(self):
         # (Re)create the output directory.
@@ -94,16 +96,16 @@ class Build:
                 # always rebuild last day counter page
                 self._render_day_counter(d)
 
-            # render dayline
-            if self.config["show_day_index"]:
-                self._render_dayline(dayline, month)
-
             # Paginate and fetch messages for the month until the end...
-            page = 0
-            last_id = 1000_000_000_000_000 if new_on_top else 0
+            last_id = 1000_000_000_000_000_000 if new_on_top else 0
             total = self.db.get_message_count(
                 month.date.year, month.date.month)
             total_pages = math.ceil(total / self.config["per_page"])
+            page = total_pages+1 if new_on_top else 0
+
+            # render dayline
+            if self.config["show_day_index"]:
+                self._render_dayline(dayline, month, total_pages)
 
             self._render_pagination(month, total_pages)
 
@@ -116,13 +118,9 @@ class Build:
 
                 last_id = messages[-1].id
 
-                page += 1
-                fname = self.make_filename(month, page)
-                if new_on_top:
-                    if index_page is None:
-                        index_page = fname
-                else:
-                    index_page = fname
+                page = page - 1 if new_on_top else page + 1
+                fname = self.make_filename(month, page, total_pages)
+                month_top_page = fname.find('_') == -1
 
                 # Collect the message ID -> page name for all messages in the set
                 # to link to replies in arbitrary positions across months, paginated pages.
@@ -134,10 +132,16 @@ class Build:
 
                 filename_rendered_exists = Path(os.path.join(self.config["publish_dir"], fname)).exists()
                 if self.config["incremental_builds"] and len(messages) == self.config["per_page"]\
-                        and filename_rendered_exists:
+                        and filename_rendered_exists and not month_top_page:
                     log.info(f"Incremental builds: file {fname} exists. Skip rendering.")
                 else:
                     self._render_page(messages, month, dayline, fname, page, total_pages)
+
+                if new_on_top:
+                    if index_page is None:
+                        index_page = fname
+                else:
+                    index_page = fname
 
         # The last page chronologically is the latest page. Make it index.
         if index_page:
@@ -159,9 +163,13 @@ class Build:
         with open(fname, "r") as f:
             self.rss_template = Build._load_template_file(fname)
 
-    def make_filename(self, month, page) -> str:
-        fname = "{}{}.html".format(
-            month.slug, "_" + str(page) if page > 1 else "")
+    def make_filename(self, month, page, total_pages) -> str:
+        if self.config["new_on_top"]:
+            fname = "{}{}.html".format(
+                month.slug, "_" + str(page) if page < total_pages else "")
+        else:
+            fname = "{}{}.html".format(
+                month.slug, "_" + str(page) if page > 1 else "")
         return fname
 
     @staticmethod
@@ -194,11 +202,11 @@ class Build:
         with open(os.path.join(self.config["publish_dir"], fname), "w", encoding="utf8") as f:
             f.write(html)
 
-    def _render_dayline(self, dayline, month):
+    def _render_dayline(self, dayline, month, total_pages):
         fname = f"dayline-{month.slug}.js"
         log.info(f"Rendering: : {fname}")
         html = self._dayline_template.render(
-            dayline=dayline, make_filename=self.make_filename, month=month
+            dayline=dayline, make_filename=self.make_filename, month=month, total_pages=total_pages
         )
         with open(os.path.join(self.config["publish_dir"], fname), "w", encoding="utf8") as f:
             f.write(html)

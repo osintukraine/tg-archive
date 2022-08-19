@@ -145,6 +145,13 @@ class DB:
             """, (limit, "{}{:02d}".format(year, month)))
 
         for r in cur.fetchall():
+            cnt = r[1]
+            p = r[2]
+            if new_on_top:
+                total_pages = math.ceil(cnt / limit) + 1
+                page = total_pages - p
+            else:
+                page = p
             yield Day(date=r[0],
                       slug=r[0].strftime("%Y-%m-%d"),
                       label=r[0].strftime("%d %b %Y"),
