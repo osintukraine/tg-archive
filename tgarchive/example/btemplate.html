@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% set page_title = config.page_title.format(group=config.group, date=month.label, page=pagination.current) %}
+    {% set meta_description = config.meta_description.format(group=config.group, date=config.date) %}
+    <title>{{ page_title }}</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="{{ meta_description }}">
+    <meta name="referrer" content="no-referrer">
+    <link rel="shortcut icon" href="static/favicon.png">
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .content {
+            flex: 1 0 auto;
+        }
+        .footer {
+            flex-shrink: 0;
+        }
+        .left-column {
+            background-color: #f8d7da; /* Light pink */
+        }
+        .center-column {
+            background-color: #d1ecf1; /* Light blue */
+        }
+        .right-column {
+            background-color: #d4edda; /* Light green */
+        }
+    </style>
+</head>
+<body>
+    <div class="content container">
+        <div class="row">
+            <!-- Left Column -->
+            <div class="col-md-4 left-column">
+                <h2>Months</h2>
+                <ul id="months-list" class="list-group">
+                    <!-- List months here -->
+                    {% for year, months in timeline.items() | reverse %}
+                        <li class="">
+                            <h3 class="year"><a href="{{ months[0].slug }}.html">{{ year }}</a></h3>
+                            <ul class="months">
+                                {% for m in months | reverse %}
+                                    <li class="{% if m.slug == month.slug %}selected{% endif %}">
+                                        <a href="{{ m.slug }}.html">
+                                            {{ m.label }}
+                                            <span class="count">({{ m.count }})
+                                        </span></a>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <!-- Center Column -->
+            <div class="col-md-4 center-column">
+                <h2>Posts</h2>
+                <!-- Pagination -->
+                <nav aria-label="Page navigation example">
+                    <ul class="pagination justify-content-center">
+                        {% for p in range(1, pagination.total + 1) %}
+                            <li class="page-item {% if pagination.current == p %}active{% endif %}">
+                                <a class="page-link" href="{{ month.slug }}{% if p > 1 %}_{{ p }}{% endif %}.html">{{ p }}</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </nav>
+                <!-- Posts go here -->
+                <div id="posts">
+                    <!-- Each post will be a div with class "post" -->
+                    <!-- Generate posts -->
+                    {% for m in messages %}
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ m.user.first_name }} {{ m.user.last_name }} (@{{ m.user.username }})</h5>
+                                <p class="card-text">{{ m.content }}</p>
+                            </div>
+                        </div>
+                    {% endfor; %}
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="col-md-4 right-column">
+                <h2>Days</h2>
+                <ul id="days-list" class="list-group">
+                    <!-- List days here -->
+                    {% for _, d in dayline.items() %}
+                        <li class="day-{{ d.slug }}">
+                            <a href="{{ make_filename(month, d.page) }}#{{ d.slug }}">
+                                {{ d.date.strftime("%d %b %Y") }} <span class="count">({{ d.count }})</span>
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer bg-light py-3">
+        <div class="container">
+            <!-- Footer content goes here -->
+            {% if config.publish_rss_feed %}
+                <a href="index.xml">RSS feed.</a>
+            {% endif %} &nbsp;&nbsp;
+            Made with <a href="https://github.com/knadh/tg-archive">tg-archive</a>
+        </div>
+    </footer>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
